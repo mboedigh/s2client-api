@@ -276,7 +276,7 @@ bool Convert(const SC2APIProtocol::ImageData& image, ImageData& data) {
     data.data = image.data();
 
     int expectedSizeBits = data.width * data.height * data.bits_per_pixel;
-    return expectedSizeBits > 0 && data.data.size() * 8 == expectedSizeBits;
+    return expectedSizeBits > 0 && data.data.size() * (size_t)8 == (size_t)expectedSizeBits;
 }
 
 bool Convert(const ObservationPtr& observation_ptr, RenderedFrame& render) {

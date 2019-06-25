@@ -436,7 +436,7 @@ static bool SampleImageData(const std::string& data, int width, int height, cons
     }
 
     // Image data is stored with an upper left origin.
-    assert(data.size() == width * height);
+    assert(data.size() == (size_t)width * (size_t)height);
     result = data[pointI.x + (height - 1 - pointI.y) * width];
     return true;
 }
