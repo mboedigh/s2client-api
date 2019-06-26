@@ -53,7 +53,7 @@ void Matrix1BPP(const char* bytes, int w_mat, int h_mat, int off_x, int off_y, i
     assert(window_);
     
     SDL_Rect rect = CreateRect(0, 0, px_w, px_h);
-    for (size_t y = 0; y < h_mat; ++y) {
+    for (size_t y = 0; (size_t) y < h_mat; ++y) {
         for (size_t x = 0; x < w_mat; ++x) {
             rect.x = off_x + (int(x) * rect.w);
             rect.y = off_y + (int(y) * rect.h);

@@ -93,9 +93,9 @@ struct WindowsProcess {
 std::vector<WindowsProcess> windows_processes;
 
 static int GetIndexOfProcess(uint64_t processe_id) {
-    for (int i = 0; i < windows_processes.size(); ++i) {
+    for ( size_t i = 0; i < windows_processes.size(); ++i) {
         if ((DWORD)processe_id == windows_processes[i].pi_.dwProcessId)
-            return i;
+            return (int) i;
     }
     return -1;
 }
