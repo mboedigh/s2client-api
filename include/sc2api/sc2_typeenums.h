@@ -479,6 +479,7 @@ namespace sc2 {
         HARVEST_RETURN_PROBE = 299,   // Target: None.
         HARVEST_RETURN_SCV = 296,   // Target: None.
         HOLDPOSITION = 18,    // Target: None.
+        GENERAL_HOLDPOSITION = 3793, // Target: None.
         LAND = 3678,  // Target: Point.
         LAND_BARRACKS = 554,   // Target: Point.
         LAND_COMMANDCENTER = 419,   // Target: Point.
@@ -532,7 +533,9 @@ namespace sc2 {
         MORPH_WARPPRISMPHASINGMODE = 1528,  // Target: None.
         MORPH_WARPPRISMTRANSPORTMODE = 1530,  // Target: None.
         MOVE = 16,    // Target: Unit, Point.
+        GENERAL_MOVE = 3794, // Target: Unit, Point.
         PATROL = 17,    // Target: Unit, Point.
+        GENERAL_PATROL = 3795, // Target: Unit, Point.
         RALLY_BUILDING = 195,   // Target: Unit, Point.
         RALLY_COMMANDCENTER = 203,   // Target: Unit, Point.
         RALLY_HATCHERY_UNITS = 211,   // Target: Unit, Point.
@@ -721,6 +724,7 @@ namespace sc2 {
         UNLOADUNIT_NYDASNETWORK = 1440,  // Target: None.
         UNLOADUNIT_OVERLORD = 1409,  // Target: None.
         UNLOADUNIT_WARPPRISM = 914,   // Target: None.
+        GENERAL_UNLOADUNIT = 3795,   // Target: None.
     };
 
     enum class UPGRADE_ID {
