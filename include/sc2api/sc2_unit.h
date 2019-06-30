@@ -99,10 +99,8 @@ public:
         CloakedDetected = 2,
         //! No cloaking.
         NotCloaked = 3,
-        //! Cloacked ally, but detected, as always 
-        CloackedAllied = 5,
         //! Could not determine cloaking state.
-        Unknown = 5,
+        Unknown = 4
     };
 
     //! If the unit is shown on screen or not.
@@ -212,6 +210,17 @@ public:
     void ClearExisting();
     bool UnitExists(Tag tag);
 
+    const std::vector<Unit*>& getNewUnits() const noexcept { return units_newly_created_; };
+    const std::vector<Unit*>& getUnitsEnteringVision() const noexcept { return units_entering_vision_; };
+    const std::vector<Unit*>& getCompletedBuildings() const noexcept { return units_constructed_; };
+    const std::vector<Unit*>& getIdledUnits() const noexcept { return units_idled_; };
+    const std::vector<const Unit*>& getDamagedUnits() const noexcept { return units_damaged_; };
+
+    void enteredVision(Unit* u) { units_entering_vision_.push_back(u); }
+    void completedBuilding(Unit* u) { units_constructed_.push_back(u); }
+    void idled(Unit* u) { if (u->alliance == Unit::Alliance::Self) units_idled_.push_back(u); }
+    void damaged(const Unit* u) { units_damaged_.push_back(u); }
+
 private:
     void IncrementIndex();
 
@@ -222,6 +231,11 @@ private:
     PoolIndex available_index_;
     std::unordered_map<Tag, Unit*> tag_to_unit_;
     std::unordered_map<Tag, Unit*> tag_to_existing_unit_;
+    std::vector<Unit *> units_newly_created_;
+    std::vector<Unit *> units_entering_vision_;
+    std::vector<Unit *> units_constructed_;
+    std::vector<Unit *> units_idled_;
+    std::vector<const Unit *> units_damaged_;
 };
 
 //! Determines if the unit matches the unit type.

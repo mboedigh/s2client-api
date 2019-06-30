@@ -62,6 +62,10 @@ public:
     //!< \param unit The destroyed unit.
     virtual void OnUnitDestroyed(const Unit*) {}
 
+    //! Called whenever a neutral placeholder unit is replaced with an actual unit
+    //!< \param unit The destroyed unit.
+    virtual void OnNeutralUnitCreated(const Unit*) {}
+
     //! Called when a Unit has been created by the player.
     //!< \param unit The created unit.
     virtual void OnUnitCreated(const Unit*) {}
@@ -80,6 +84,8 @@ public:
     //! Called when the unit in the previous step had a build progress less than 1.0 but is greater than or equal to 1.0 in the current step.
     //!< \param unit The constructed unit.
     virtual void OnBuildingConstructionComplete(const Unit*) {}
+
+    virtual void OnUnitsDamaged(std::vector<const Unit *> const & ) {}
 
     //! Called when a nydus is placed.
     virtual void OnNydusDetected() {}
