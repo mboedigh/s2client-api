@@ -615,7 +615,7 @@ namespace sc2 {
         }
 
         unit_pool_.ClearExisting();
-        Convert(observation_raw, unit_pool_, current_game_loop_);
+        Convert(observation_raw, unit_pool_, current_game_loop_, previous_game_loop);
 
         // Remap ability ids in orders.
         unit_pool_.ForEachExistingUnit([&](Unit & unit) {
