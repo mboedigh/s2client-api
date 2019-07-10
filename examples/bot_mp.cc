@@ -38,8 +38,8 @@ int main(int argc, char* argv[]) {
     }
 
     coordinator.SetParticipants({
+        CreateParticipant(sc2::Race::Terran, &bot1),
         CreateParticipant(sc2::Race::Terran, player_one),
-        CreateParticipant(sc2::Race::Terran, &bot2),
     });
 
     // Start the game.

@@ -94,13 +94,17 @@ public:
     //! Unit cloak state.
     enum CloakState {
         //! Cloaked, invisible to enemies until detected.
+        CloakedUnknown = 0,
+        //! Cloaked, invisible to enemies until detected.
         Cloaked = 1,
         //! Cloaked enemy, but detected.
         CloakedDetected = 2,
+        // ! Cloaked ally, always detected
+        CloakedAllied = 3,
         //! No cloaking.
-        NotCloaked = 3,
+        NotCloaked = 4,
         //! Could not determine cloaking state.
-        Unknown = 4
+        Unknown = 5
     };
 
     //! If the unit is shown on screen or not.
