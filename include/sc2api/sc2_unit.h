@@ -9,6 +9,7 @@
 #include "sc2_typeenums.h"
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include <string>
 #include <stdint.h>
 
@@ -214,16 +215,17 @@ public:
     void ClearExisting();
     bool UnitExists(Tag tag);
 
-    const std::vector<Unit*>& getNewUnits() const noexcept { return units_newly_created_; };
-    const std::vector<Unit*>& getUnitsEnteringVision() const noexcept { return units_entering_vision_; };
-    const std::vector<Unit*>& getCompletedBuildings() const noexcept { return units_constructed_; };
-    const std::vector<Unit*>& getIdledUnits() const noexcept { return units_idled_; };
-    const std::vector<const Unit*>& getDamagedUnits() const noexcept { return units_damaged_; };
+    inline const std::vector<Unit const *>& getNewUnits() const noexcept { return units_newly_created_; };
+    inline const std::vector<Unit const *>& getUnitsEnteringVision() const noexcept { return units_entering_vision_; };
+    inline const std::vector<Unit const *>& getCompletedBuildings() const noexcept { return units_constructed_; };
+    inline const std::vector<Unit const *>& getDamagedUnits() const noexcept { return units_damaged_; };
+    inline const std::unordered_set<Unit const*> &getIdledUnits() const noexcept { return units_idled_; };
 
-    void enteredVision(Unit* u) { units_entering_vision_.push_back(u); }
-    void completedBuilding(Unit* u) { units_constructed_.push_back(u); }
-    void idled(Unit* u) { if (u->alliance == Unit::Alliance::Self) units_idled_.push_back(u); }
-    void damaged(const Unit* u) { units_damaged_.push_back(u); }
+
+    inline void enteredVision(Unit const *u) { units_entering_vision_.push_back(u); }
+    inline void completedBuilding(Unit const* u) { units_constructed_.push_back(u); }
+    inline void idled(Unit const* u) { if (u->alliance == Unit::Alliance::Self) units_idled_.insert(u); }
+    inline void damaged(Unit const * u) { units_damaged_.push_back(u); }
 
 private:
     void IncrementIndex();
@@ -235,11 +237,11 @@ private:
     PoolIndex available_index_;
     std::unordered_map<Tag, Unit*> tag_to_unit_;
     std::unordered_map<Tag, Unit*> tag_to_existing_unit_;
-    std::vector<Unit *> units_newly_created_;
-    std::vector<Unit *> units_entering_vision_;
-    std::vector<Unit *> units_constructed_;
-    std::vector<Unit *> units_idled_;
-    std::vector<const Unit *> units_damaged_;
+    std::vector<Unit const *> units_newly_created_;
+    std::vector<Unit const *> units_entering_vision_;
+    std::vector<Unit const *> units_constructed_;
+    std::vector<Unit const *> units_damaged_;
+    std::unordered_set<Unit const *> units_idled_;
 };
 
 //! Determines if the unit matches the unit type.

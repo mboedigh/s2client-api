@@ -239,7 +239,7 @@ bool Convert(const ObservationRawPtr& observation_raw, UnitPool& unit_pool, uint
             order.progress = order_proto.progress();
             unit->orders.push_back(order);
         }
-        if (hadOrders&& unit->orders.empty())
+        if (hadOrders && unit->orders.empty())
             unit_pool.idled(unit);
 
         unit->add_on_tag = observation_unit.add_on_tag();

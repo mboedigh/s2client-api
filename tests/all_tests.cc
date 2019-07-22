@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
     TEST(sc2::TestUnitCommand);
     TEST(sc2::TestPerformance);
     TEST(sc2::TestObservationInterface);
-    //TEST(sc2::TestObservationActions);
+    TEST(sc2::TestObservationActions);
     TEST(sc2::TestRendered);
 
     if (success)

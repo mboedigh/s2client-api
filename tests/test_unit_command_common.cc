@@ -94,7 +94,7 @@ namespace sc2 {
         }
 
         for (UnitOrder order : unit->orders) {
-            if (order.ability_id == test_ability) {
+            if (order.ability_id == GetGeneralizedAbilityID((int)test_ability, *obs)) {
                 order_found = true;
             }
         }
@@ -108,7 +108,7 @@ namespace sc2 {
 
     void TestUnitCommand::VerifyUnitExistsAndComplete(UNIT_TYPEID unit_type, bool verify_complete) {
         bool unit_exists = false;
-        const Unit* test_unit;
+        const Unit* test_unit = nullptr;
 
         const ObservationInterface* obs = agent_->Observation();
         const Units& units = obs->GetUnits(Unit::Alliance::Self);
@@ -119,13 +119,14 @@ namespace sc2 {
             }
         }
 
+        if (!unit_exists) {
+            ReportError("Expected unit does not exist.");
+        }
+
         if (test_unit && test_unit->build_progress != 1.0f && verify_complete) {
             ReportError("Unit building/training did not complete as expected.");
         }
 
-        if (!unit_exists) {
-            ReportError("Expected unit does not exist.");
-        }
     }
 
     void TestUnitCommand::VerifyUnitDoesNotExist(UNIT_TYPEID unit_type) {

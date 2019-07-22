@@ -10,6 +10,9 @@
 #include <algorithm>
 #include <iostream>
 #include <unordered_map>
+#include <unordered_set>
+#include <iterator> // inserter
+#include <algorithm>
 #include <cassert>
 #include <limits>
 #include <fstream>
@@ -150,7 +153,7 @@ namespace sc2 {
 
     Units ObservationImp::GetUnits() const {
         Units units;
-        unit_pool_.ForEachExistingUnit([&](Unit & unit) {
+        unit_pool_.ForEachExistingUnit([&](Unit& unit) {
             units.push_back(&unit);
             });
         return units;
@@ -162,7 +165,7 @@ namespace sc2 {
 
     Units ObservationImp::GetUnits(Unit::Alliance alliance, Filter filter) const {
         Units units;
-        unit_pool_.ForEachExistingUnit([&](Unit & unit) {
+        unit_pool_.ForEachExistingUnit([&](Unit& unit) {
             if (unit.alliance != alliance) {
                 return;
             }
@@ -176,7 +179,7 @@ namespace sc2 {
 
     Units ObservationImp::GetUnits(Filter filter) const {
         Units units;
-        unit_pool_.ForEachExistingUnit([&](Unit & unit) {
+        unit_pool_.ForEachExistingUnit([&](Unit& unit) {
             if (!filter || filter(unit)) {
                 units.push_back(&unit);
             }
@@ -437,7 +440,7 @@ namespace sc2 {
         // Image data is stored with an upper left origin.
         assert(data.size() == width * height);
         // const int idx = pointI.x + (height - 1 - pointI.y) * width;
-        const int idx = pointI.x + pointI.y* width;
+        const int idx = pointI.x + pointI.y * width;
         result = data[idx];
         return true;
     }
@@ -456,20 +459,20 @@ namespace sc2 {
 
         //const int idx = pointI.x + (height - 1 - pointI.y) * width;
         const int idx = pointI.x + pointI.y * width;
-        result = getBit( data, idx);
+        result = getBit(data, idx);
         return true;
     }
 
-    static bool SampleImageData(const SC2APIProtocol::ImageData & data, const Point2D & point, unsigned char& result) {
+    static bool SampleImageData(const SC2APIProtocol::ImageData& data, const Point2D& point, unsigned char& result) {
         if (data.bits_per_pixel() == 1)
             return SampleImageBit(data.data(), data.size().x(), data.size().y(), point, result);
         else if (data.bits_per_pixel() == 8)
-        return SampleImageData(data.data(), data.size().x(), data.size().y(), point, result);
+            return SampleImageData(data.data(), data.size().x(), data.size().y(), point, result);
         else
             return false;
     }
 
-    static bool SampleImageData(const ImageData & data, const Point2D & point, unsigned char& result) {
+    static bool SampleImageData(const ImageData& data, const Point2D& point, unsigned char& result) {
         if (data.bits_per_pixel == 1)
             return SampleImageBit(data.data, data.width, data.height, point, result);
         else if (data.bits_per_pixel == 8)
@@ -478,7 +481,7 @@ namespace sc2 {
             return false;
     }
 
-    bool ObservationImp::HasCreep(const Point2D & point) const {
+    bool ObservationImp::HasCreep(const Point2D& point) const {
         ObservationRawPtr observation_raw;
         SET_SUBMESSAGE_RESPONSE(observation_raw, observation_, raw_data);
         if (observation_raw.HasErrors()) {
@@ -495,7 +498,7 @@ namespace sc2 {
         return value > 0 ? true : false;
     }
 
-    Visibility ObservationImp::GetVisibility(const Point2D & point) const {
+    Visibility ObservationImp::GetVisibility(const Point2D& point) const {
         ObservationRawPtr observation_raw;
         SET_SUBMESSAGE_RESPONSE(observation_raw, observation_, raw_data);
         if (observation_raw.HasErrors()) {
@@ -546,7 +549,9 @@ namespace sc2 {
         if (!SampleImageData(game_info.terrain_height, point, value))
             return false;
 
-        float decodedHeight = -100.0f + 200.0f * float(value) / 255.0f;
+        // I refit these values using least squares to the heights of resource placeholders during OnGameStart
+        // the least squared values are rounded slightly because they were close to powers of 2
+        float decodedHeight = -16.0f + float(value) / 8.0f;
         return decodedHeight;
     }
 
@@ -618,7 +623,7 @@ namespace sc2 {
         Convert(observation_raw, unit_pool_, current_game_loop_, previous_game_loop);
 
         // Remap ability ids in orders.
-        unit_pool_.ForEachExistingUnit([&](Unit & unit) {
+        unit_pool_.ForEachExistingUnit([&](Unit& unit) {
             for (UnitOrder& unit_order : unit.orders) {
                 if (use_generalized_ability_) {
                     unit_order.ability_id = GetGeneralizedAbilityID(unit_order.ability_id, *this);
@@ -1134,7 +1139,7 @@ namespace sc2 {
         debug_unit_values_.push_back(unit_value);
     }
 
-    void DebugImp::DebugSetLife(float value, const Unit * unit) {
+    void DebugImp::DebugSetLife(float value, const Unit* unit) {
         if (!unit) return;
         DebugSetUnitValue unit_value;
         unit_value.unit_value = DebugSetUnitValue::UnitValue::Life;
@@ -1143,7 +1148,7 @@ namespace sc2 {
         debug_unit_values_.push_back(unit_value);
     }
 
-    void DebugImp::DebugSetShields(float value, const Unit * unit) {
+    void DebugImp::DebugSetShields(float value, const Unit* unit) {
         if (!unit) return;
         DebugSetUnitValue unit_value;
         unit_value.unit_value = DebugSetUnitValue::UnitValue::Shields;
@@ -1152,7 +1157,7 @@ namespace sc2 {
         debug_unit_values_.push_back(unit_value);
     }
 
-    void DebugImp::DebugCreateUnit(UnitTypeID unit_type, const Point2D & p, uint32_t player_id, uint32_t count) {
+    void DebugImp::DebugCreateUnit(UnitTypeID unit_type, const Point2D& p, uint32_t player_id, uint32_t count) {
         DebugUnit create_unit;
         create_unit.unit_type = unit_type;
         create_unit.pos = p;
@@ -1161,12 +1166,12 @@ namespace sc2 {
         debug_unit_.push_back(create_unit);
     }
 
-    void DebugImp::DebugKillUnit(const Unit * unit) {
+    void DebugImp::DebugKillUnit(const Unit* unit) {
         if (!unit) return;
         debug_kill_tag_.push_back(unit->tag);
     }
 
-    void DebugImp::DebugMoveCamera(const Point2D & pos) {
+    void DebugImp::DebugMoveCamera(const Point2D& pos) {
         has_move_camera = true;
         debug_move_camera_ = pos;
     }
@@ -1467,7 +1472,7 @@ namespace sc2 {
         virtual void Load();
     };
 
-    ControlImp::ControlImp(Client & client) :
+    ControlImp::ControlImp(Client& client) :
         client_(client),
         app_state_(AppState::normal),
         is_multiplayer_(false),
@@ -1488,7 +1493,7 @@ namespace sc2 {
         return proto_;
     }
 
-    bool ControlImp::Connect(const std::string & address, int port, int timeout_ms) {
+    bool ControlImp::Connect(const std::string& address, int port, int timeout_ms) {
         // Keep retrying the connection until the timeout is hit.
         bool connected = false;
         unsigned int timeout_seconds = ((unsigned int)timeout_ms + 1500) / 1000;
@@ -1566,7 +1571,7 @@ namespace sc2 {
         return success;
     }
 
-    void ControlImp::ResolveMap(const std::string & map_name, SC2APIProtocol::RequestCreateGame * request) {
+    void ControlImp::ResolveMap(const std::string& map_name, SC2APIProtocol::RequestCreateGame* request) {
         // BattleNet map
         if (!HasExtension(map_name, ".SC2Map")) {
             request->set_battlenet_map_name(map_name);
@@ -1598,7 +1603,7 @@ namespace sc2 {
         local_map->set_map_path(map_name);
     }
 
-    bool ControlImp::CreateGame(const std::string & map_name, const std::vector<PlayerSetup> & players, bool realtime) {
+    bool ControlImp::CreateGame(const std::string& map_name, const std::vector<PlayerSetup>& players, bool realtime) {
         GameRequestPtr request = proto_.MakeRequest();
         SC2APIProtocol::RequestCreateGame* request_create_game = request->mutable_create_game();
         ResolveMap(map_name, request_create_game);
@@ -1676,7 +1681,7 @@ namespace sc2 {
         return success;
     }
 
-    bool ControlImp::RequestJoinGame(PlayerSetup setup, const InterfaceSettings & settings, const Ports & ports) {
+    bool ControlImp::RequestJoinGame(PlayerSetup setup, const InterfaceSettings& settings, const Ports& ports) {
         observation_imp_->ClearFlags();
 
         is_multiplayer_ = ports.IsValid();
@@ -1773,7 +1778,7 @@ namespace sc2 {
             return false;
 
         GameRequestPtr request = proto_.MakeRequest();
-        SC2APIProtocol::RequestStep * step = request->mutable_step();
+        SC2APIProtocol::RequestStep* step = request->mutable_step();
         step->set_count(count);
         if (!proto_.SendRequest(request)) {
             return false;
@@ -1791,7 +1796,7 @@ namespace sc2 {
         return GetObservation();
     }
 
-    bool ControlImp::SaveReplay(const std::string & path) {
+    bool ControlImp::SaveReplay(const std::string& path) {
         GameRequestPtr request = proto_.MakeRequest();
         request->mutable_save_replay();
         if (!proto_.SendRequest(request)) {
@@ -1903,7 +1908,7 @@ namespace sc2 {
         return response;
     }
 
-    void ControlImp::SetProcessInfo(const ProcessInfo & pi) {
+    void ControlImp::SetProcessInfo(const ProcessInfo& pi) {
         pi_ = pi;
     }
 
@@ -2065,19 +2070,19 @@ namespace sc2 {
     void ControlImp::IssueUnitAddedEvents() {
         for (auto unit : observation_imp_->unit_pool_.getNewUnits())
         {
-            if (unit->alliance == Unit::Alliance::Self) 
+            if (unit->alliance == Unit::Alliance::Self)
                 client_.OnUnitCreated(unit);
             else if (unit->alliance == Unit::Alliance::Neutral && unit->display_type == Unit::DisplayType::Visible)
                 client_.OnNeutralUnitCreated(unit);
-            }
+        }
 
         for (auto unit : observation_imp_->unit_pool_.getUnitsEnteringVision())
         {
-            if (unit->alliance == Unit::Alliance::Enemy && unit->display_type == Unit::DisplayType::Visible) 
+            if (unit->alliance == Unit::Alliance::Enemy && unit->display_type == Unit::DisplayType::Visible)
                 client_.OnUnitEnterVision(unit);
-            }
-
         }
+
+    }
 
     void ControlImp::IssueBuildingCompletedEvents() {
         for (auto unit : observation_imp_->unit_pool_.getCompletedBuildings())
@@ -2086,27 +2091,38 @@ namespace sc2 {
                 client_.OnBuildingConstructionComplete(unit);
             }
         }
-        }
+    }
     void ControlImp::IssueUnitDamagedEvents() {
         const auto& units = observation_imp_->unit_pool_.getDamagedUnits();
         if (!units.empty())
             client_.OnUnitsDamaged(units);
     }
 
-    void ControlImp::IssueIdleEvents(const std::vector<Tag> & ) {
+    void ControlImp::IssueIdleEvents(const std::vector<Tag>& commands) {
 
-        // this may be a problem to issue idle events for units in the commands list. if a unit exists multiple times, it will call onidle multiple times and generate
-        // multiple additional commands each call. Thus commands explode in size. 
-        //for (auto t : commands)  {
-        //    const auto *unit = observation_imp_->unit_pool_.GetExistingUnit(t);
-        //    if (unit && unit->orders.empty())
-        //       client_.OnUnitIdle(unit);
-        //}
-        for (auto unit : observation_imp_->unit_pool_.getIdledUnits())
-        {
-            client_.OnUnitIdle(unit);
+        auto& unit_pool = observation_imp_->unit_pool_;
+        // identify idled units where commands were issued last step, but units have no orders now (maybe failed, maybe executed instantly)
+        for (auto t : commands) {
+            const auto* unit = unit_pool.GetExistingUnit(t);
+            if (unit && unit->orders.empty())
+                unit_pool.idled(unit);
         }
-        }
+
+        // add newly created units (if they are completed)
+        for (auto const* u : unit_pool.getNewUnits())
+            if (u->build_progress == 1.0f)
+                unit_pool.idled(u);
+
+        // add completed buildings
+        auto const& new_buildings = unit_pool.getCompletedBuildings();
+        std::for_each(new_buildings.begin(), new_buildings.end(), [&unit_pool](auto* u) {unit_pool.idled(u); });
+
+
+        // send only one idle event for any unit in any frame
+        auto const& idled_units = unit_pool.getIdledUnits();
+        std::for_each(idled_units.begin(), idled_units.end(), [this](auto* u) {client_.OnUnitIdle(u); });
+
+    }
 
     void ControlImp::IssueAlertEvents() {
         // Iterate the alerts and issue relevant events.
@@ -2140,7 +2156,7 @@ namespace sc2 {
         }
     }
 
-    bool ControlImp::IssueEvents(const std::vector<Tag> & commands) {
+    bool ControlImp::IssueEvents(const std::vector<Tag>& commands) {
         if (observation_imp_->current_game_loop_ == observation_imp_->previous_game_loop) {
             return false;
         }
@@ -2160,7 +2176,7 @@ namespace sc2 {
     }
 
     void ControlImp::OnGameStart() {
-        Units units = observation_imp_->GetUnits(Unit::Alliance::Self, [](const Unit & unit) {
+        Units units = observation_imp_->GetUnits(Unit::Alliance::Self, [](const Unit& unit) {
             return unit.unit_type == UNIT_TYPEID::TERRAN_COMMANDCENTER ||
                 unit.unit_type == UNIT_TYPEID::PROTOSS_NEXUS ||
                 unit.unit_type == UNIT_TYPEID::ZERG_HATCHERY;
@@ -2178,7 +2194,7 @@ namespace sc2 {
         observation_imp_->game_info_.start_locations.push_back(observation_imp_->start_location_);
     }
 
-    void ControlImp::Error(ClientError error, const std::vector<std::string> & errors) {
+    void ControlImp::Error(ClientError error, const std::vector<std::string>& errors) {
         // An ConnectionClosed error can come off a civetweb worker thread.
         std::lock_guard<std::mutex> guard(error_mutex_);
 
@@ -2186,14 +2202,14 @@ namespace sc2 {
         client_errors_.push_back(error);
         for (auto const& e : errors) {
             protocol_errors_.push_back(e);
-    }
+        }
 
 #ifdef SC2API_ASSERT_ON_ERROR
         assert(0);
 #endif
-}
+    }
 
-    void ControlImp::ErrorIf(bool condition, ClientError error, const std::vector<std::string> & errors) {
+    void ControlImp::ErrorIf(bool condition, ClientError error, const std::vector<std::string>& errors) {
         if (condition) {
             Error(error, errors);
         }
@@ -2271,16 +2287,16 @@ namespace sc2 {
         control_imp_ = new ControlImp(*this);
     }
 
-    bool IsCarryingMinerals(const Unit & unit) {
-        auto is_mineral = [](const BuffID & buff) {
+    bool IsCarryingMinerals(const Unit& unit) {
+        auto is_mineral = [](const BuffID& buff) {
             return buff == BUFF_ID::CARRYMINERALFIELDMINERALS
                 || buff == BUFF_ID::CARRYHIGHYIELDMINERALFIELDMINERALS;
         };
         return std::find_if(unit.buffs.begin(), unit.buffs.end(), is_mineral) != unit.buffs.end();
     }
 
-    bool IsCarryingVespene(const Unit & unit) {
-        auto is_vespene = [](const BuffID & buff) {
+    bool IsCarryingVespene(const Unit& unit) {
+        auto is_vespene = [](const BuffID& buff) {
             return buff == BUFF_ID::CARRYHARVESTABLEVESPENEGEYSERGAS
                 || buff == BUFF_ID::CARRYHARVESTABLEVESPENEGEYSERGASPROTOSS
                 || buff == BUFF_ID::CARRYHARVESTABLEVESPENEGEYSERGASZERG;
@@ -2288,7 +2304,7 @@ namespace sc2 {
         return std::find_if(unit.buffs.begin(), unit.buffs.end(), is_vespene) != unit.buffs.end();
     }
 
-    bool IsVisible::operator()(const Unit & unit) {
+    bool IsVisible::operator()(const Unit& unit) {
         return unit.display_type == Unit::Visible;
     };
 

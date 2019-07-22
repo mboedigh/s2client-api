@@ -26,7 +26,6 @@ Unit* UnitPool::CreateUnit(Tag tag) {
     tag_to_unit_[tag] = unit;
     tag_to_existing_unit_[tag] = unit;
     units_newly_created_.push_back(unit);
-    idled(unit);
     IncrementIndex();
     return unit;
 }

@@ -81,7 +81,7 @@ foreach (proto ${proto_files})
 
     add_custom_command(
         DEPENDS protoc
-        COMMAND ${PROJECT_BINARY_DIR}/bin/protoc -I=${CMAKE_CURRENT_SOURCE_DIR}/../protocol/ --cpp_out=${PROJECT_BINARY_DIR}/generated ${proto}
+        COMMAND protoc -I=${CMAKE_CURRENT_SOURCE_DIR}/../protocol/ --cpp_out=${PROJECT_BINARY_DIR}/generated ${proto}
         OUTPUT ${outputCC} ${outputH}
     )
 

@@ -7,152 +7,158 @@
 
 namespace sc2 {
 
-//
-// TestSequence
-//
+    //
+    // TestSequence
+    //
 
-TestSequence::TestSequence() :
-    agent_(nullptr),
-    wait_game_loops_(5) {
-}
-
-bool TestSequence::DidSucceed() const {
-    return errors_.empty();
-}
-
-void TestSequence::ReportError(const char* error) {
-    test_name_ = typeid(*this).name();
-    test_name_ = test_name_.substr(test_name_.find("::") + 2, -1);
-
-    errors_.push_back(error);
-}
-
-void TestSequence::KillAllUnits() {
-    Units units = agent_->Observation()->GetUnits();
-    for (const auto unit : units) {
-        agent_->Debug()->DebugKillUnit(unit);
-        for (const auto passenger : unit->passengers) {
-            agent_->Debug()->DebugKillUnit(agent_->Observation()->GetUnit(passenger.tag));
-        }
+    TestSequence::TestSequence() :
+        agent_(nullptr),
+        wait_game_loops_(5) {
     }
-    agent_->Debug()->SendDebug();
-}
 
+    bool TestSequence::DidSucceed() const {
+        return errors_.empty();
+    }
 
-//
-// TestSequence
-//
+    void TestSequence::ReportError(const char* error) {
+        test_name_ = typeid(*this).name();
+        test_name_ = test_name_.substr(test_name_.find("::") + 2, -1);
 
-void UnitTestBot::OnStep() {
-    const ObservationInterface* obs = Observation();
-    uint32_t game_loop = obs->GetGameLoop();
+        errors_.push_back(error);
+    }
 
-    // Move to the next sequence if this sequence is done.
-    if (game_loop >= game_loop_done_) {
-        if (current_sequence_ == std::size_t(-1)) {
-            current_sequence_ = 0;
-            OnTestsBegin();
-        }
-        else {
-            sequences_[current_sequence_]->OnTestFinish();
-            if (!sequences_[current_sequence_]->DidSucceed()) {
-                success_ = false;
-                std::cout << "Test: " << sequences_[current_sequence_]->test_name_ << " failed!" << std::endl;
-                 for (const std::string& error : sequences_[current_sequence_]->errors_) {
-                    std::cout << "    Error: " << error << std::endl;
-                }
+    void TestSequence::KillAllUnits() {
+        Units units = agent_->Observation()->GetUnits();
+        for (const auto unit : units) {
+            agent_->Debug()->DebugKillUnit(unit);
+            for (const auto passenger : unit->passengers) {
+                agent_->Debug()->DebugKillUnit(agent_->Observation()->GetUnit(passenger.tag));
             }
-            ++current_sequence_;
         }
-        if (IsFinished()) {
-            OnTestsEnd();
+        agent_->Debug()->SendDebug();
+    }
+
+
+    //
+    // TestSequence
+    //
+
+    void UnitTestBot::OnStep() {
+        const ObservationInterface* obs = Observation();
+        uint32_t game_loop = obs->GetGameLoop();
+
+        // Move to the next sequence if this sequence is done.
+        if (game_loop >= game_loop_done_) {
+            if (current_sequence_ == std::size_t(-1)) {
+                current_sequence_ = 0;
+                OnTestsBegin();
+            }
+            else {
+                sequences_[current_sequence_]->OnTestFinish();
+                if (!sequences_[current_sequence_]->DidSucceed()) {
+                    success_ = false;
+                    std::cout << "    Failed: " << sequences_[current_sequence_]->test_name_ << std::endl;
+                    for (const std::string& error : sequences_[current_sequence_]->errors_) {
+                        std::cout << "        Error: " << error << std::endl;
+                    }
+                }
+                else
+                {
+                    std::string test_name_ = typeid(*sequences_[current_sequence_]).name();
+                    test_name_ = test_name_.substr(test_name_.find("::") + 2, -1);
+                    std::cout << "    Passed: " << test_name_ << std::endl;
+                }
+                ++current_sequence_;
+            }
+            if (IsFinished()) {
+                OnTestsEnd();
+                return;
+            }
+
+            sequences_[current_sequence_]->OnTestStart();
+            game_loop_done_ = game_loop + sequences_[current_sequence_]->wait_game_loops_;
             return;
         }
+        if (current_sequence_ == std::size_t(-1))
+            return;
 
-        sequences_[current_sequence_]->OnTestStart();
-        game_loop_done_ = game_loop + sequences_[current_sequence_]->wait_game_loops_;
-        return;
-    }
-    if (current_sequence_ == std::size_t(-1))
-        return;
+        sequences_[current_sequence_]->OnStep();
 
-    sequences_[current_sequence_]->OnStep();
-
-    OnPostStep();
-}
-
-void UnitTestBot::OnGameStart() {
-    if (current_sequence_ < sequences_.size()) {
-        sequences_[current_sequence_]->OnGameStart();
-    }
-}
-
-void UnitTestBot::OnGameEnd() {
-    if (current_sequence_ < sequences_.size()) {
-        sequences_[current_sequence_]->OnGameEnd();
+        OnPostStep();
     }
 
-    if (!IsFinished()) {
-        success_ = false;
-        current_sequence_ = sequences_.size() + 1;
-        std::cout << "Game ended before tests finished." << std::endl;
-        return;
+    void UnitTestBot::OnGameStart() {
+        if (current_sequence_ < sequences_.size()) {
+            sequences_[current_sequence_]->OnGameStart();
+        }
     }
-}
 
-void UnitTestBot::OnGameFullStart() {
-    if (current_sequence_ < sequences_.size()) {
-        sequences_[current_sequence_]->OnGameFullStart();
-    }
-}
+    void UnitTestBot::OnGameEnd() {
+        if (current_sequence_ < sequences_.size()) {
+            sequences_[current_sequence_]->OnGameEnd();
+        }
 
-void UnitTestBot::OnUnitDestroyed(const Unit* unit) {
-    if (current_sequence_ < sequences_.size()) {
-        sequences_[current_sequence_]->OnUnitDestroyed(unit);
+        if (!IsFinished()) {
+            success_ = false;
+            current_sequence_ = sequences_.size() + 1;
+            std::cout << "Game ended before tests finished." << std::endl;
+            return;
+        }
     }
-}
 
-void UnitTestBot::OnUnitCreated(const Unit* unit) {
-    if (current_sequence_ < sequences_.size()) {
-        sequences_[current_sequence_]->OnUnitCreated(unit);
+    void UnitTestBot::OnGameFullStart() {
+        if (current_sequence_ < sequences_.size()) {
+            sequences_[current_sequence_]->OnGameFullStart();
+        }
     }
-}
 
-void UnitTestBot::OnUnitIdle(const Unit* unit) {
-    if (current_sequence_ < sequences_.size()) {
-        sequences_[current_sequence_]->OnUnitIdle(unit);
+    void UnitTestBot::OnUnitDestroyed(const Unit* unit) {
+        if (current_sequence_ < sequences_.size()) {
+            sequences_[current_sequence_]->OnUnitDestroyed(unit);
+        }
     }
-}
 
-void UnitTestBot::OnUnitEnterVision(const Unit* unit) {
-    if (current_sequence_ < sequences_.size()) {
-        sequences_[current_sequence_]->OnUnitEnterVision(unit);
+    void UnitTestBot::OnUnitCreated(const Unit* unit) {
+        if (current_sequence_ < sequences_.size()) {
+            sequences_[current_sequence_]->OnUnitCreated(unit);
+        }
     }
-}
 
-void UnitTestBot::OnUpgradeCompleted(UpgradeID upgrade) {
-    if (current_sequence_ < sequences_.size()) {
-        sequences_[current_sequence_]->OnUpgradeCompleted(upgrade);
+    void UnitTestBot::OnUnitIdle(const Unit* unit) {
+        if (current_sequence_ < sequences_.size()) {
+            sequences_[current_sequence_]->OnUnitIdle(unit);
+        }
     }
-}
 
-void UnitTestBot::OnBuildingConstructionComplete(const Unit* unit) {
-    if (current_sequence_ < sequences_.size()) {
-        sequences_[current_sequence_]->OnBuildingConstructionComplete(unit);
+    void UnitTestBot::OnUnitEnterVision(const Unit* unit) {
+        if (current_sequence_ < sequences_.size()) {
+            sequences_[current_sequence_]->OnUnitEnterVision(unit);
+        }
     }
-}
 
-void UnitTestBot::OnNydusDetected() {
-    if (current_sequence_ < sequences_.size()) {
-        sequences_[current_sequence_]->OnNydusDetected();
+    void UnitTestBot::OnUpgradeCompleted(UpgradeID upgrade) {
+        if (current_sequence_ < sequences_.size()) {
+            sequences_[current_sequence_]->OnUpgradeCompleted(upgrade);
+        }
     }
-}
 
-void UnitTestBot::OnNuclearLaunchDetected() {
-    if (current_sequence_ < sequences_.size()) {
-        sequences_[current_sequence_]->OnNuclearLaunchDetected();
+    void UnitTestBot::OnBuildingConstructionComplete(const Unit* unit) {
+        if (current_sequence_ < sequences_.size()) {
+            sequences_[current_sequence_]->OnBuildingConstructionComplete(unit);
+        }
     }
-}
+
+    void UnitTestBot::OnNydusDetected() {
+        if (current_sequence_ < sequences_.size()) {
+            sequences_[current_sequence_]->OnNydusDetected();
+        }
+    }
+
+    void UnitTestBot::OnNuclearLaunchDetected() {
+        if (current_sequence_ < sequences_.size()) {
+            sequences_[current_sequence_]->OnNuclearLaunchDetected();
+        }
+    }
 
 }
 

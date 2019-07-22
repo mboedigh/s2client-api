@@ -39,11 +39,13 @@ namespace sc2 {
                 ReportError("Could not find the test unit.");
             }
 
-            if (test_unit_ && test_unit_->cloak != Unit::CloakState::Cloaked) {
+            if (test_unit_ && test_unit_->cloak != Unit::CloakState::CloakedAllied) {
                 ReportError("Unit is not cloaked as expected.");
             }
 
-            VerifyUnitIdleAfterOrder(test_unit_type_);
+            // Banshee order to cloak is given and received in 0 frames, so the banshee unit, as seen from the client side, never has orders and therefore doesn't go idle
+            // idle is defined as having an order in frame t-1 but not in frame t
+            //VerifyUnitIdleAfterOrder(test_unit_type_);
             KillAllUnits();
         }
 
@@ -315,12 +317,12 @@ namespace sc2 {
         }
 
         void OnTestFinish() override {
-            VerifyUnitExistsAndComplete(UNIT_TYPEID::PROTOSS_GATEWAY);
+            VerifyUnitExistsAndComplete(UNIT_TYPEID::PROTOSS_WARPGATE);
             VerifyUnitIdleAfterOrder(test_unit_type_);
-            VerifyUnitIdleAfterOrder(UNIT_TYPEID::PROTOSS_GATEWAY);
+            VerifyUnitIdleAfterOrder(UNIT_TYPEID::PROTOSS_WARPGATE);
             const ObservationInterface* obs = agent_->Observation();
-            if (obs->GetWarpGateCount() != 0) {
-                ReportError("Gateway is being incorrectly identified as a Warp Gate.");
+            if (obs->GetWarpGateCount() !=1) {
+                ReportError("Gateway was not transformed to Warp Gate.");
             }
             KillAllUnits();
         }
@@ -993,12 +995,16 @@ namespace sc2 {
     public:
         TestMorphStarportLand() {
             test_unit_type_ = UNIT_TYPEID::TERRAN_STARPORTFLYING;
-            test_ability_ = ABILITY_ID::LAND;
+            test_ability_ = ABILITY_ID::BUILD_TECHLAB_STARPORT;
             placing_structure_ = true;
         }
 
         void SetTestTime() override {
             wait_game_loops_ = 200;
+        }
+
+        void AdditionalTestSetup() override {
+            target_point_ = GetPointOffsetX(origin_pt_, -5);
         }
 
         void OnTestFinish() override {
@@ -1255,7 +1261,7 @@ namespace sc2 {
             if (target_units.front()->is_blip != true) {
                 ReportError("Target unit is not a blip.");
             }
-            if (target_units.front()->cloak != Unit::CloakState::Unknown) {
+            if (target_units.front()->cloak != Unit::CloakState::CloakedUnknown) {
                 ReportError("Target unit cloak state is incorrect.");
             }
             if (target_units.front()->display_type != Unit::DisplayType::Hidden) {
@@ -1604,7 +1610,7 @@ namespace sc2 {
             if (test_unit_ && test_unit_->passengers.size() != 1) {
                 ReportError("Unit count in bunker is not 1.");
             }
-            if (test_unit_ && test_unit_->cargo_space_max != 6) {
+            if (test_unit_ && test_unit_->cargo_space_max != 8) {
                 ReportError("Bunker cargo space max is not correct.");
             }
             if (test_unit_ && test_unit_->cargo_space_taken != 2) {
@@ -1624,6 +1630,7 @@ namespace sc2 {
     class TestTransportBunkerUnloadAll : public TestUnitCommandNoTarget {
     public:
         bool marauders_loaded_ = false;
+        int  expected_cargo_load;
 
         TestTransportBunkerUnloadAll() {
             test_unit_type_ = UNIT_TYPEID::TERRAN_BUNKER;
@@ -1637,8 +1644,11 @@ namespace sc2 {
         }
 
         void AdditionalTestSetup() override {
-            agent_->Debug()->DebugCreateUnit(UNIT_TYPEID::TERRAN_MARAUDER, origin_pt_, agent_->Observation()->GetPlayerID(), 3);
+            int new_marauders = 4;
+            agent_->Debug()->DebugCreateUnit(UNIT_TYPEID::TERRAN_MARAUDER, origin_pt_, agent_->Observation()->GetPlayerID(), new_marauders);
             agent_->Debug()->SendDebug();
+            int total_marauders = new_marauders+1; // plus one original
+            expected_cargo_load = 8;
         }
 
         void OnStep() override {
@@ -1668,12 +1678,12 @@ namespace sc2 {
                 marauders_loaded_ = true;
             }
 
-            if (obs->GetGameLoop() < order_on_game_loop_ + 10) {
+            if (obs->GetGameLoop() < order_on_game_loop_ + 20) {
                 return;
             }
 
-            if (!ability_command_sent_ && test_unit->cargo_space_taken != 6) {
-                ReportError("Units are not present in bunker as expected.");
+            if (!ability_command_sent_ && test_unit->cargo_space_taken != expected_cargo_load) {
+                ReportError("Units did not enter bunker as expected.");
             }
 
             IssueUnitCommand(act);
@@ -1687,7 +1697,7 @@ namespace sc2 {
             if (test_unit_ && test_unit_->passengers.size() != 0) {
                 ReportError("Unit count in bunker is not 0.");
             }
-            if (test_unit_ && test_unit_->cargo_space_max != 6) {
+            if (test_unit_ && test_unit_->cargo_space_max != 8) {
                 ReportError("Bunker cargo space max is not correct.");
             }
             if (test_unit_ && test_unit_->cargo_space_taken != 0) {
@@ -1741,7 +1751,7 @@ UnitCommandTestBot::UnitCommandTestBot() :
     Add(TestMorphBroodLord());
     Add(TestMorphLair());
     Add(TestMorphSiegeTankSiegeMode());
-    //Add(TestMorphStarportLand());
+    Add(TestMorphStarportLand());
     Add(TestMorphStarportLiftOff());
     Add(TestMoprphWarpGate());
     Add(TestEffectMoveMove());
