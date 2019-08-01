@@ -129,15 +129,14 @@ bool FindEnemyStructure(const ObservationInterface* observation, const Unit*& en
 }
 
 bool GetRandomUnit(const Unit*& unit_out, const ObservationInterface* observation, UnitTypeID unit_type) {
-    Units my_units = observation->GetUnits(Unit::Alliance::Self);
-    std::random_shuffle(my_units.begin(), my_units.end()); // Doesn't work, or doesn't work well.
-    for (const auto unit : my_units) {
-        if (unit->unit_type == unit_type) {
-            unit_out = unit;
-            return true;
-        }
-    }
-    return false;
+
+    auto isOfType = [unit_type](sc2::Unit const & u) { return u.unit_type == unit_type;  };
+    Units my_units = observation->GetUnits(Unit::Alliance::Self, isOfType);
+    if (my_units.empty())
+        return false;
+    auto i = std::rand() % my_units.size();
+    unit_out = my_units[i];
+    return true;
 }
 
 void MultiplayerBot::PrintStatus(std::string msg) {

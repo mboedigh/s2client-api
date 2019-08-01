@@ -438,7 +438,7 @@ namespace sc2 {
         }
 
         // Image data is stored with an upper left origin.
-        assert(data.size() == width * height);
+        assert(data.size() == (size_t)width * (size_t)height);
         // const int idx = pointI.x + (height - 1 - pointI.y) * width;
         const int idx = pointI.x + pointI.y * width;
         result = data[idx];
@@ -822,7 +822,7 @@ namespace sc2 {
             return std::vector<float>(queries.size(), 0.0f);
         }
 
-        if (response_query->pathing_size() != queries.size()) {
+        if ((size_t)response_query->pathing_size() != queries.size()) {
             return std::vector<float>(queries.size(), 0.0f);
         }
 
@@ -877,7 +877,7 @@ namespace sc2 {
             return std::vector<bool>(queries.size(), false);
         }
 
-        if (response_query->placements_size() != queries.size()) {
+        if ((size_t)response_query->placements_size() != queries.size()) {
             return std::vector<bool>(queries.size(), false);
         }
 

@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-const char* kReplayFolder = "E:/Replays/";
+const char* kReplayFolder = "C:\\Program Files (x86)\\StarCraft II\\Replays\\";
 
 class Replay : public sc2::ReplayObserver {
 public:
@@ -27,6 +27,16 @@ public:
     }
 
     void OnStep() final {
+        int i = 0;
+    }
+
+    void OnUnitEnterVision(const sc2::Unit* u) {
+        
+    }
+
+    void OnUnitDestroyed(const sc2::Unit* u)
+    {
+
     }
 
     void OnGameEnd() final {
