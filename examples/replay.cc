@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-const char* kReplayFolder = "C:\\Program Files (x86)\\StarCraft II\\Replays\\";
+const char* kReplayFolder = "C:\\Program Files (x86)\\StarCraft II\\Replays.full\\";
 
 class Replay : public sc2::ReplayObserver {
 public:
@@ -16,13 +16,14 @@ public:
 
     void OnGameStart() final {
         const sc2::ObservationInterface* obs = Observation();
-        assert(obs->GetUnitTypeData().size() > 0);
+        auto& ud = obs->GetUnitTypeData();
+        // assert(obs->GetUnitTypeData().size() > 0);
         count_units_built_.resize(obs->GetUnitTypeData().size());
         std::fill(count_units_built_.begin(), count_units_built_.end(), 0);
     }
     
     void OnUnitCreated(const sc2::Unit* unit) final {
-        assert(uint32_t(unit->unit_type) < count_units_built_.size());
+        // assert(uint32_t(unit->unit_type) < count_units_built_.size());
         ++count_units_built_[unit->unit_type];
     }
 
