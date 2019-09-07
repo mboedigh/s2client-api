@@ -58,3 +58,4 @@ project/lib
 docs/html
 docs/latex
 doxygen.log
+/cmake_build.log
