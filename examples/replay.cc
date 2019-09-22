@@ -4,7 +4,9 @@
 
 #include <iostream>
 
-const char* kReplayFolder = "C:\\Program Files (x86)\\StarCraft II\\Replays.full\\";
+//const char* kReplayFolder = "C:/Program Files (x86)/StarCraft II/Replays/IEM-Katowice-2019-Replaypack/Final/soO vs Stats/";
+const char* kReplayFolder = "C:\\Program Files (x86)\\StarCraft II\\Replays\\";
+//const char* kReplayFolder = "C:\\Program Files (x86)\\StarCraft II\\Replays.full\\";
 
 class Replay : public sc2::ReplayObserver {
 public:
@@ -72,5 +74,4 @@ int main(int argc, char* argv[]) {
     coordinator.AddReplayObserver(&replay_observer);
 
     while (coordinator.Update());
-    while (!sc2::PollKeyPress());
 }
