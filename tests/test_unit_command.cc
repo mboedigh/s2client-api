@@ -317,12 +317,16 @@ namespace sc2 {
         }
 
         void OnTestFinish() override {
+            // Due to a balance change that causes Gateways to auto morph into WarpGates when
+            // the warpgate tech is researched, and we unlock all research at the start of the test,
+            // so verify that the gateway has transformed to a warpgate
             VerifyUnitExistsAndComplete(UNIT_TYPEID::PROTOSS_WARPGATE);
             VerifyUnitIdleAfterOrder(test_unit_type_);
             VerifyUnitIdleAfterOrder(UNIT_TYPEID::PROTOSS_WARPGATE);
+
             const ObservationInterface* obs = agent_->Observation();
-            if (obs->GetWarpGateCount() !=1) {
-                ReportError("Gateway was not transformed to Warp Gate.");
+            if (obs->GetWarpGateCount() != 1) {
+                ReportError("Expected to found single warpgate but failed.");
             }
             KillAllUnits();
         }
@@ -394,7 +398,7 @@ namespace sc2 {
 
     class TestCancelBuildInProgressFactory : public TestUnitCommandNoTarget {
     public:
-        const Unit* test_factory_;
+        const Unit* test_factory_ = nullptr;
         bool factory_built_ = false;
 
         TestCancelBuildInProgressFactory() {
@@ -682,7 +686,7 @@ namespace sc2 {
 
     class TestEffectScan : public TestUnitCommandTargetingPoint {
     public:
-        const Unit* test_hatchery_;
+        const Unit* test_hatchery_ = nullptr;
         bool hatchery_spawned_ = false;
         bool verify_pre_scan_ = false;
         bool verify_post_scan_ = false;
@@ -719,7 +723,7 @@ namespace sc2 {
 
             Units units = obs->GetUnits();
 
-            const Unit* test_unit;
+            const Unit* test_unit = nullptr;
             for (const auto& unit : units) {
                 if (unit->unit_type == test_unit_type_) {
                     test_unit_ = unit;
@@ -1682,8 +1686,8 @@ namespace sc2 {
                 return;
             }
 
-            if (!ability_command_sent_ && test_unit->cargo_space_taken != expected_cargo_load) {
-                ReportError("Units did not enter bunker as expected.");
+            if (!ability_command_sent_ && test_unit->cargo_space_taken != 8) {
+                ReportError("Units are not present in bunker as expected.");
             }
 
             IssueUnitCommand(act);

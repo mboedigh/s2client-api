@@ -226,10 +226,10 @@ const ReplayInfo& ReplayControlImp::GetReplayInfo() const {
 
 class ObserverActionImp : public ObserverActionInterface {
 public:
-    ControlInterface& control_;
+    ControlInterface* control_;
     GameRequestPtr request_;
 
-    ObserverActionImp(ControlInterface& control);
+    explicit ObserverActionImp(ControlInterface* control);
 
     SC2APIProtocol::RequestObserverAction* GetRequest();
 
@@ -240,13 +240,13 @@ public:
     void SendActions() final;
 };
 
-ObserverActionImp::ObserverActionImp(ControlInterface& control) :
+ObserverActionImp::ObserverActionImp(ControlInterface* control) :
     control_(control) {
 }
 
 SC2APIProtocol::RequestObserverAction* ObserverActionImp::GetRequest() {
     if (request_ == nullptr) {
-        request_ = control_.Proto().MakeRequest();
+        request_ = control_->Proto().MakeRequest();
     }
     return request_->mutable_obs_action();
 }
@@ -271,12 +271,12 @@ void ObserverActionImp::SendActions() {
         return;
     }
 
-    if (!control_.Proto().SendRequest(request_)) {
+    if (!control_->Proto().SendRequest(request_)) {
         return;
     }
 
     request_ = nullptr;
-    control_.WaitForResponse();
+    control_->WaitForResponse();
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -286,7 +286,7 @@ void ObserverActionImp::SendActions() {
 ReplayObserver::ReplayObserver() :
     replay_control_imp_(nullptr) {
     replay_control_imp_ = new ReplayControlImp(Control(), this);
-    observer_action_imp_ = new ObserverActionImp(*Control());
+    observer_action_imp_ = new ObserverActionImp(Control());
 }
 
 ReplayObserver::~ReplayObserver() {
@@ -304,16 +304,13 @@ ObserverActionInterface* ReplayObserver::ObserverAction() {
 
 bool ReplayObserver::IgnoreReplay(const ReplayInfo& replay_info, uint32_t& /*player_id*/) {
     // Ignore games less than 30 seconds.
-    static const float MinimumReplayDuration = 30.0f;
-    if (replay_info.duration < MinimumReplayDuration) {
-        return true;
-    }
-
-    return false;
+    return replay_info.duration < 30.0f;
 }
 
-void ReplayObserver::SetControl(ControlInterface* control) {
-    replay_control_imp_->control_interface_ = control;
+void ReplayObserver::Reset() {
+    Client::Reset();
+    replay_control_imp_->control_interface_ = Control();
+    observer_action_imp_->control_ = Control();
 }
 
 }

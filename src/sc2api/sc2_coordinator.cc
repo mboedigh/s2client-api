@@ -626,11 +626,9 @@ bool CoordinatorImp::Relaunch(ReplayObserver* replay_observer) {
     // Try to kill SC2 then relaunch it
     sc2::TerminateProcess(pi.process_id);
 
-    // Reset the control interface so internal state gets reset.
+    // NOTE (alkurbatov): Reset the control interface
+    // so internal state gets reinitialized.
     replay_observer->Reset();
-
-    // ReplayObserver needs the control interface from Client.
-    replay_observer->SetControl(replay_observer->Control());
 
     // Control interface has been reconstructed.
     control = replay_observer->Control();
@@ -738,13 +736,10 @@ void Coordinator::LaunchStarcraft() {
 }
 
 void Coordinator::Connect(int port) {
-    while (imp_->process_settings_.process_info.size() < imp_->agents_.size()) {
-        imp_->process_settings_.process_info.push_back(
-            ProcessInfo(imp_->process_settings_.net_address, 0, port)
-        );
-    }
-
-    if (!AttachClients(imp_->process_settings_, std::vector<sc2::Client*>(imp_->agents_.begin(), imp_->agents_.end()))) {
+    if (!imp_->agents_.front()->Control()->Connect(
+        imp_->process_settings_.net_address,
+        port,
+        imp_->process_settings_.timeout_ms)) {
         std::cerr << "Failed to attach to starcraft." << std::endl;
         exit(1);
     }
@@ -920,6 +915,10 @@ void Coordinator::SetWindowLocation(int x, int y) {
 void Coordinator::SetUseGeneralizedAbilityId(bool value) {
     assert(!imp_->starcraft_started_);
     imp_->use_generalized_ability_id = value;
+}
+
+void Coordinator::SetReplayPerspective(int player_id) {
+    imp_->replay_settings_.player_id = player_id;
 }
 
 bool Coordinator::SetReplayPath(const std::string& path) {

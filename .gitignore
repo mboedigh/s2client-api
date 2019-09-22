@@ -49,6 +49,7 @@ Debug/
 Release/
 CodeAnalyst/
 .vs/
+.vscode/
 
 project/include
 project/lib
@@ -58,4 +59,6 @@ project/lib
 docs/html
 docs/latex
 doxygen.log
+
 /cmake_build.log
+node_modules

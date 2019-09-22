@@ -1,7 +1,7 @@
-s2client-api
-============
+cpp-sc2
+=======
 
-[![Build Status](https://travis-ci.org/Blizzard/s2client-api.png?branch=master)](https://travis-ci.org/Blizzard/s2client-api)
+[![Build Status](https://travis-ci.org/alkurbatov/cpp-sc2.svg?branch=master)](https://travis-ci.org/alkurbatov/cpp-sc2)
 
 The StarCraft II API provides access to in-game state observation and unit control. The API is a wrapper around protobuf defined protocol over a websocket connection.
 
@@ -45,14 +45,19 @@ int main(int argc, char* argv[]) {
 }
 ```
 
-You can find a detailed tutorial on what this code does in docs/tutorial1.md.
+You can find a detailed tutorial on what this code does in [docs/tutorial1.md](docs/tutorial1.md).
+
+Support
+-------
+
+Feel free to post questions on the unofficial Starcraft II AI Discord server. [Invite Link](https://discordapp.com/invite/Emm5Ztz)
 
 Documentation
 -------------
 
-You can find API in documentation on our [github pages site](http://blizzard.github.io/s2client-api). The documentation is generated from code automatically, using [Doxygen](http://www.stack.nl/~dimitri/doxygen/)
+You can find API in documentation on our [github pages site](https://alkurbatov.github.io/cpp-sc2). The documentation is generated from code automatically, using [Doxygen](http://www.stack.nl/~dimitri/doxygen/)
 
-To editor and generate the documentation yourself.
+To edit and generate the documentation yourself:
 
 1. Download and install [doxygen](http://www.stack.nl/~dimitri/doxygen/download.html#srcbin)
 2. Fork the repository and clone it locally
@@ -83,7 +88,7 @@ We do our best to conform to the Google C++ Style Guide with the exception that 
 of two space tabs.
 
 Additional Downloads
-----------------
+--------------------
 
 ### Maps and Replays
 
@@ -91,14 +96,11 @@ This repository only comes with a few maps for testing.
 
 Additional maps and replays can be found [here](https://github.com/Blizzard/s2client-proto#downloads).
 
-### Precompiled Libs
+### Example bots
 
-If you are using Visual Studio 2017 and just want precompiled library files you can download the following package:
-
-[Precompiled Libs](http://blzdistsc2-a.akamaihd.net/SC2API_Binary_vs2017.zip)
+For example of usage of this API please refer to [Suvorov bot](https://github.com/alkurbatov/suvorov-bot).
 
 ### Other Libraries
 
 Additional community built AI libraries can be found [here](https://github.com/Blizzard/s2client-proto#community).
 
-If you are new to programming, the [CommandCenter](https://github.com/davechurchill/CommandCenter) framework may be a good starting point.

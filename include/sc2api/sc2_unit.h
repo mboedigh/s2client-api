@@ -78,6 +78,8 @@ public:
         Snapshot = 2,
         //! Unit will be hidden to enemies.
         Hidden = 3,
+        // Building that hasn't started construction.
+        Placeholder = 4,
     };
 
     //! Relationship to this player.
@@ -94,18 +96,15 @@ public:
 
     //! Unit cloak state.
     enum CloakState {
-        //! Cloaked, invisible to enemies until detected.
+        //! Under the fog, so unknown whether it's cloaked or not.
         CloakedUnknown = 0,
-        //! Cloaked, invisible to enemies until detected.
+        //! Cloaked enemy units, invisible until detected.
         Cloaked = 1,
         //! Cloaked enemy, but detected.
         CloakedDetected = 2,
-        // ! Cloaked ally, always detected
-        CloakedAllied = 3,
         //! No cloaking.
-        NotCloaked = 4,
-        //! Could not determine cloaking state.
-        Unknown = 5
+        //! Cloaked ally unit.
+        CloakedAllied = 4,
     };
 
     //! If the unit is shown on screen or not.
